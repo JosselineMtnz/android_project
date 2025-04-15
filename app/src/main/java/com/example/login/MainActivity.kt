@@ -15,7 +15,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foro1.ui.theme.Foro1Theme
+import com.example.login.ui.theme.LoginTheme
 import android.util.Patterns
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Foro1Theme {
+            LoginTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     LoginScreen(modifier = Modifier.padding(innerPadding))
                 }
@@ -102,7 +102,7 @@ fun isValidEmail(email: String): Boolean {
 @Preview(showBackground = true)
 @Composable
 fun PreviewLoginScreen() {
-    Foro1Theme {
+    LoginTheme {
         LoginScreen()
     }
 }
