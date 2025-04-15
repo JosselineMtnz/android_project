@@ -38,7 +38,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-
+    var loginSuccess by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -83,14 +83,18 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     errorMessage = "Los campos no pueden estar vacíos."
                 } else if (!isValidEmail(email)) {
                     errorMessage = "Formato de correo inválido."
-                } else {
+                } else if(email=="equipo@email.com"&& password == "1234"){
                     errorMessage = ""
-
+                    loginSuccess=true
+                    println("Login exitoso")
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Iniciar sesión")
+        }
+        if(loginSuccess){
+            Text("Inicio de sesión exitoso", color = MaterialTheme.colorScheme.primary)
         }
     }
 }
