@@ -1,7 +1,7 @@
 package com.example.login
 
 import android.os.Bundle
-import androidx.compose.ui.Alignment
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,14 +9,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.login.ui.theme.LoginTheme
-import android.util.Patterns
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,8 +27,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LoginTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding))
+                val navController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ) {
+                    composable("login") {
+                        LoginScreen(navController)
+                    }
+                    composable("welcome/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email") ?: ""
+                        WelcomeScreen(email)
+                    }
                 }
             }
         }
@@ -85,8 +99,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     errorMessage = "Formato de correo inválido."
                 } else if(email=="equipo@email.com"&& password == "1234"){
                     errorMessage = ""
-                    loginSuccess=true
-                    println("Login exitoso")
+                    navController.navigate("welcome/${email}") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -99,14 +114,20 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     }
 }
 
-fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+@Composable
+fun WelcomeScreen(email: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = "¡Bienvenido!", fontSize = 24.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = "Has iniciado sesión como: $email", fontSize = 16.sp)
+    }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    LoginTheme {
-        LoginScreen()
-    }
+fun isValidEmail(email: String): Boolean {
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
