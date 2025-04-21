@@ -15,7 +15,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("welcome/{email}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email") ?: ""
-                        WelcomeScreen(email)
+                        WelcomeScreen(email, navController)
                     }
                 }
             }
@@ -47,12 +47,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
-
+fun LoginScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    var loginSuccess by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("")}
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -62,45 +62,45 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     ) {
         Text(text = "Inicio de Sesión", fontSize = 24.sp, modifier = Modifier.padding(bottom = 24.dp))
 
-        //Correo
         TextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Correo Electrónico") },
-            isError = errorMessage.isNotEmpty() && !isValidEmail(email),
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
         )
 
-        //Contra
         Spacer(modifier = Modifier.height(16.dp))
+
         TextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
-            isError = errorMessage.isNotEmpty() && password.isEmpty(),
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
         )
 
-        if (errorMessage.isNotEmpty()) {
-            Text(text = errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-        }
-
-        //boton inicio
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-
-                if (email.isEmpty() || password.isEmpty()) {
-                    errorMessage = "Los campos no pueden estar vacíos."
-                } else if (!isValidEmail(email)) {
-                    errorMessage = "Formato de correo inválido."
-                } else if(email=="equipo@email.com"&& password == "1234"){
-                    errorMessage = ""
-                    navController.navigate("welcome/${email}") {
-                        popUpTo("login") { inclusive = true }
+                when {
+                    email.isEmpty() || password.isEmpty() -> {
+                        errorMessage = "Los campos no pueden estar vacíos."
+                        showErrorDialog = true
+                    }
+                    !isValidEmail(email) -> {
+                        errorMessage = "Formato de correo inválido."
+                        showErrorDialog = true
+                    }
+                    email == "equipo@email.com" && password == "1234" -> {
+                        navController.navigate("welcome/${email}") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                    else -> {
+                        errorMessage = "Correo o contraseña incorrectos."
+                        showErrorDialog = true
                     }
                 }
             },
@@ -108,14 +108,25 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         ) {
             Text("Iniciar sesión")
         }
-        if(loginSuccess){
-            Text("Inicio de sesión exitoso", color = MaterialTheme.colorScheme.primary)
-        }
+    }
+
+    // Diálogo de error
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text("Aceptar")
+                }
+            },
+            title = { Text("Error") },
+            text = { Text(errorMessage) }
+        )
     }
 }
 
 @Composable
-fun WelcomeScreen(email: String) {
+fun WelcomeScreen(email: String, navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -125,6 +136,17 @@ fun WelcomeScreen(email: String) {
     ) {
         Text(text = "¡Bienvenido!", fontSize = 24.sp, modifier = Modifier.padding(bottom = 8.dp))
         Text(text = "Has iniciado sesión como: $email", fontSize = 16.sp)
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                navController.navigate("login") {
+                    popUpTo("welcome/{$email}") { inclusive = true }
+                }
+            }
+        ) {
+            Text("Cerrar sesión")
+        }
     }
 }
 
