@@ -29,6 +29,11 @@ Esto es un proyecto realizado para la materia Desarrollo de Software para Móvil
   git clone https://github.com/JosselineMtnz/kotlin_project.git 
 ```
 
+2- Corre el proyecto en tu telefono (asegurate de tener tu telefono con el modo desarrollador activado)
+
+
+
+
 ## Autores
 
 - Josseline Esmeralda Martínez Hernández - MH180422 @JosselineMtnz
