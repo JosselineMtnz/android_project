@@ -1,7 +1,7 @@
 package com.example.login
 
 import android.os.Bundle
-import androidx.compose.ui.Alignment
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,23 +9,37 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foro1.ui.theme.Foro1Theme
-import android.util.Patterns
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.login.ui.theme.LoginTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Foro1Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(modifier = Modifier.padding(innerPadding))
+            LoginTheme {
+                val navController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ) {
+                    composable("login") {
+                        LoginScreen(navController)
+                    }
+                    composable("welcome/{email}") { backStackEntry ->
+                        val email = backStackEntry.arguments?.getString("email") ?: ""
+                        WelcomeScreen(email)
+                    }
                 }
             }
         }
@@ -38,7 +52,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-
+    var loginSuccess by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -83,26 +97,37 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                     errorMessage = "Los campos no pueden estar vacíos."
                 } else if (!isValidEmail(email)) {
                     errorMessage = "Formato de correo inválido."
-                } else {
+                } else if(email=="equipo@email.com"&& password == "1234"){
                     errorMessage = ""
-
+                    navController.navigate("welcome/${email}") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Iniciar sesión")
         }
+        if(loginSuccess){
+            Text("Inicio de sesión exitoso", color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+@Composable
+fun WelcomeScreen(email: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = "¡Bienvenido!", fontSize = 24.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = "Has iniciado sesión como: $email", fontSize = 16.sp)
     }
 }
 
 fun isValidEmail(email: String): Boolean {
     return Patterns.EMAIL_ADDRESS.matcher(email).matches()
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    Foro1Theme {
-        LoginScreen()
-    }
 }
