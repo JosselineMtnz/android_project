@@ -1,10 +1,12 @@
 package com.example.login
 
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
-                    .setServerClientId("651800734249-60cc1fl49crkb6ohlqf5imfks1dg2jea.apps.googleusercontent.com")
+                    .setServerClientId("970799186064-geqt4q58nl77j9hq1ugnldm6c390qvrj.apps.googleusercontent.com")
                     .setFilterByAuthorizedAccounts(false)
                     .build()
             )
@@ -53,18 +55,29 @@ class MainActivity : ComponentActivity() {
 
                 val launcher =
                     rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-                        val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
-                        val idToken = credential.googleIdToken
-                        val email = credential.id
+                        try {
+                            val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+                            val idToken = credential.googleIdToken
+                            val email = credential.id
 
-                        if (idToken != null) {
-                            val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-                            auth.signInWithCredential(firebaseCredential)
-                                .addOnCompleteListener {
-                                    if (it.isSuccessful) {
-                                        navController.navigate("welcome/$email")
+                            if (idToken != null) {
+                                val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+                                auth.signInWithCredential(firebaseCredential)
+                                    .addOnCompleteListener {
+                                        if (it.isSuccessful) {
+                                            navController.navigate("welcome/$email")
+                                        } else {
+                                            Log.e("FirebaseAuth", "Error al autenticar con Firebase", it.exception)
+                                        }
                                     }
-                                }
+                                    .addOnFailureListener {
+                                        Log.e("FirebaseAuth", "Excepción durante el login con Firebase", it)
+                                    }
+                            } else {
+                                Log.e("GoogleSignIn", "ID Token nulo")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("GoogleSignIn", "Error al obtener credenciales: ${e.message}", e)
                         }
                     }
 
