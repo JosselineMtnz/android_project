@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Color
 import com.example.login.ui.theme.LoginTheme
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -170,14 +172,39 @@ fun LoginScreen(
                         }
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         ) {
-            Text("Iniciar sesión con correo")
+            Text("Iniciar sesión con correo", color = MaterialTheme.colorScheme.onPrimary)
         }
 
         Spacer(Modifier.height(16.dp))
 
-        Button(onClick = onGoogleLogin, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Divider(modifier = Modifier.weight(1f), color = Color.Gray)
+            Text(
+                text = "  o  ",
+                modifier = Modifier.padding(horizontal = 8.dp),
+                color = Color.Gray
+            )
+            Divider(modifier = Modifier.weight(1f), color = Color.Gray)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = onGoogleLogin,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.secondary
+            ),
+            border = BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
+        ) {
             Text("Iniciar sesión con Google")
         }
     }
