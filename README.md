@@ -26,7 +26,7 @@ Esto es un proyecto realizado para la materia Desarrollo de Software para Móvil
 ## Instalación
 1- Clona el repositorio:
 ```bash
-  git clone https://github.com/JosselineMtnz/kotlin_project.git 
+  git clone https://github.com/JosselineMtnz/android_project.git
 ```
 
 2- Corre el proyecto en tu telefono (asegurate de tener tu telefono con el modo desarrollador activado)
