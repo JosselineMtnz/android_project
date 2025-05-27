@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.graphics.Color
 import com.example.login.ui.theme.LoginTheme
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -28,6 +30,7 @@ import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -104,6 +107,12 @@ class MainActivity : ComponentActivity() {
                     composable("welcome/{email}") { backStackEntry ->
                         val email = backStackEntry.arguments?.getString("email") ?: ""
                         WelcomeScreen(email, navController)
+                    }
+                    composable("ver_eventos") {
+                        VerEventosScreen(navController)
+                    }
+                    composable("crear_evento") {
+                        CrearEventoScreen(navController)
                     }
                 }
             }
@@ -238,12 +247,142 @@ fun WelcomeScreen(email: String, navController: NavHostController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(onClick = {
+            navController.navigate("ver_eventos")
+        }) {
+            Text("Ver Eventos")
+        }
+
+        Button(onClick = {
             FirebaseAuth.getInstance().signOut()
             navController.navigate("login") {
-                popUpTo("welcome/{$email}") { inclusive = true }
+                popUpTo(0)
             }
         }) {
             Text("Cerrar sesión")
         }
     }
 }
+
+@Composable
+fun CrearEventoScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+
+    var titulo by remember { mutableStateOf("") }
+    var descripcion by remember { mutableStateOf("") }
+    var ubicacion by remember { mutableStateOf("") }
+    var fecha by remember { mutableStateOf("") }
+    var hora by remember { mutableStateOf("") }
+    var mensaje by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Crear Evento", fontSize = 24.sp)
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedTextField(value = titulo, onValueChange = { titulo = it }, label = { Text("Título") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = ubicacion, onValueChange = { ubicacion = it }, label = { Text("Ubicación") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = fecha, onValueChange = { fecha = it }, label = { Text("Fecha (dd/MM/yyyy)") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = hora, onValueChange = { hora = it }, label = { Text("Hora (hh:mm)") })
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = {
+            if (titulo.isNotBlank() && descripcion.isNotBlank() && ubicacion.isNotBlank()) {
+                val evento = hashMapOf(
+                    "titulo" to titulo,
+                    "descripcion" to descripcion,
+                    "ubicacion" to ubicacion,
+                    "fecha" to fecha,
+                    "hora" to hora
+                )
+
+                db.collection("eventos")
+                    .add(evento)
+                    .addOnSuccessListener {
+                        mensaje = "Evento guardado correctamente."
+                        navController.navigate("ver_eventos")
+                    }
+                    .addOnFailureListener {
+                        mensaje = "Error al guardar evento."
+                    }
+            } else {
+                mensaje = "Todos los campos son obligatorios."
+            }
+        }) {
+            Text("Guardar Evento")
+        }
+
+        if (mensaje.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text(mensaje, color = Color.Red)
+        }
+    }
+}
+
+@Composable
+fun VerEventosScreen(navController: NavHostController) {
+    val eventos = remember { mutableStateListOf<Map<String, String>>() }
+    val db = FirebaseFirestore.getInstance()
+
+    // Escuchar cambios en tiempo real
+    LaunchedEffect(Unit) {
+        db.collection("eventos").addSnapshotListener { snapshot, e ->
+            if (e != null) return@addSnapshotListener
+            if (snapshot != null && !snapshot.isEmpty) {
+                eventos.clear()
+                for (doc in snapshot.documents) {
+                    val data = doc.data?.mapValues { it.value.toString() } ?: emptyMap()
+                    eventos.add(data)
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("Eventos", fontSize = 24.sp)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn {
+            items(eventos) { evento ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Título: ${evento["titulo"]}", fontSize = 18.sp)
+                        Text("Descripción: ${evento["descripcion"]}")
+                        Text("Ubicación: ${evento["ubicacion"]}")
+                        Text("Fecha: ${evento["fecha"]}")
+                        Text("Hora: ${evento["hora"]}")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(onClick = { navController.navigate("crear_evento") }) {
+            Text("Crear Nuevo Evento")
+        }
+    }
+}
+
