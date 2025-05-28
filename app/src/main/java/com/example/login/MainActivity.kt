@@ -90,6 +90,14 @@ class MainActivity : ComponentActivity() {
                     composable("ver_eventos") {
                         VerEventosScreen(navController, auth)
                     }
+                    composable("detalle_evento/{id}") {
+                        val id = it.arguments?.getString("id") ?: ""
+                        DetalleEventoScreen(navController, id, auth)
+                    }
+                    composable("historial") {
+                        HistorialEventosScreen(navController, auth)
+                    }
+
                 }
             }
         }
