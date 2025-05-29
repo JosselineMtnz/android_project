@@ -17,7 +17,7 @@ fun DetalleEventoScreen(
     auth: FirebaseAuth
 ) {
     val db = FirebaseFirestore.getInstance()
-    val userEmail = auth.currentUser?.email ?: ""
+    val userEmail = auth.currentUser?.email ?: return
     var evento by remember { mutableStateOf<Map<String, String>?>(null) }
     var mensaje by remember { mutableStateOf("") }
 

@@ -19,18 +19,16 @@ fun HistorialEventosScreen(navController: NavHostController, auth: FirebaseAuth)
     val eventosAsistidos = remember { mutableStateListOf<Map<String, Any>>() }
 
     LaunchedEffect(userEmail) {
-        db.collection("eventos").get().addOnSuccessListener { snapshot ->
-            eventosAsistidos.clear()
-            for (doc in snapshot) {
-                doc.reference.collection("asistentes").document(userEmail).get()
-                    .addOnSuccessListener { asistente ->
-                        if (asistente.exists()) {
-                            eventosAsistidos.add(doc.data)
-                        }
-                    }
+        val snapshot = db.collection("eventos").get().await()
+        for (doc in snapshot) {
+            val asistente = doc.reference.collection("asistentes")
+                .document(userEmail).get().await()
+            if (asistente.exists()) {
+                eventosAsistidos.add(doc.data)
             }
         }
     }
+
 
     Column(Modifier.padding(16.dp)) {
         Text("Historial de Asistencia", style = MaterialTheme.typography.headlineMedium)
