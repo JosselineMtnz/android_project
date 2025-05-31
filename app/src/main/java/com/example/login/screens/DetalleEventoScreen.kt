@@ -145,6 +145,8 @@ fun DetalleEventoScreen(
                 }
             }
         }
+
+        //esto va aca 
     } ?: Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
