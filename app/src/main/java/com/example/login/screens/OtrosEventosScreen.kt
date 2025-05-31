@@ -87,10 +87,12 @@ fun OtrosEventosScreen(navController: NavHostController, auth: FirebaseAuth) {
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable {
-                            eventoSeleccionado = evento
+                            val eventoId = evento["id"] ?: return@clickable
+                            navController.navigate("comentar/$eventoId")
+                            /*eventoSeleccionado = evento
                             showDialog = true
                             mensajeError = ""
-                            mensajeExito = ""
+                            mensajeExito = ""*/
                         },
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                     shape = MaterialTheme.shapes.medium

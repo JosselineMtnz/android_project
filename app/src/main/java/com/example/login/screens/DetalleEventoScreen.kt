@@ -20,6 +20,7 @@ import com.example.login.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import android.util.Log
 
 @Composable
 fun DetalleEventoScreen(
@@ -35,20 +36,31 @@ fun DetalleEventoScreen(
 
     // Cargar evento y comentarios
     LaunchedEffect(eventoId) {
-        db.collection("eventos").document(eventoId).get()
-            .addOnSuccessListener { doc ->
-                evento = doc.data?.mapValues { it.value.toString() }
+        val idNum = eventoId.toLongOrNull() ?: -1L
+
+        db.collection("eventos")
+            .whereEqualTo("id", idNum)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val doc = snapshot.documents.firstOrNull()
+                evento = doc?.data?.mapValues { it.value.toString() }
+                Log.d("MiApp", "Evento cargado: $evento")
             }
 
         db.collection("comentarios")
-            .whereEqualTo("eventoId", eventoId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .whereEqualTo("id_evento", idNum)
             .get()
             .addOnSuccessListener { snapshot ->
+                Log.d("MiApp", "Comentarios encontrados: ${snapshot.size()}")
                 comentarios.clear()
                 for (doc in snapshot.documents) {
                     comentarios.add(doc.data ?: emptyMap())
                 }
+                Log.d("MiApp", "Comentarios cargados: ${comentarios.size}")
+            }
+            .addOnFailureListener {
+                Log.e("MiApp", "Error al cargar comentarios: ${it.message}")
             }
     }
 
@@ -72,7 +84,11 @@ fun DetalleEventoScreen(
                 elevation = CardDefaults.cardElevation(6.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text("🎫 ${it["titulo"]}", fontSize = 24.sp, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "🎫 ${it["titulo"]}",
+                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("📝 ${it["descripcion"]}")
                     Text("📍 ${it["ubicacion"]}")
@@ -80,64 +96,78 @@ fun DetalleEventoScreen(
                 }
             }
 
-
-//aca
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    val asistencia = hashMapOf(
-                        "correo" to userEmail,
-                        "id_evento" to (it["id"]?.toLongOrNull() ?: -1L)
-                    )
-
-                    db.collection("asistencia").add(asistencia)
-                        .addOnSuccessListener { mensaje = "✅ Asistencia confirmada" }
-                        .addOnFailureListener { mensaje = "❌ Error al confirmar asistencia" }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Confirmar Asistencia")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    navController.navigate("comentar/${eventoId}")
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Dejar Comentario")
-            }
-
-            if (mensaje.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(mensaje)
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("Comentarios y Calificaciones", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            // Sección de comentarios
+            Text(
+                text = "Comentarios",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Start)
+            )
 
-            LazyColumn {
-                items(comentarios) { comentario ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("👤 ${comentario["correo"] ?: "Anónimo"}", fontWeight = FontWeight.SemiBold)
-                            Text("📝 ${comentario["comentario"] ?: ""}")
-                            Row {
-                                val rating = (comentario["rating"] as? Long)?.toInt() ?: 0
-                                repeat(rating) {
-                                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (comentarios.isEmpty()) {
+                Text("Aún no hay comentarios.", modifier = Modifier.padding(top = 8.dp))
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(comentarios) { comentario ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(6.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                // Usuario y fecha/hora
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = comentario["creado_por"]?.toString() ?: "Anónimo",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp
+                                    )
+                                    val fecha = comentario["fecha"]?.toString() ?: ""
+                                    val hora = comentario["hora"]?.toString() ?: ""
+                                    Text(
+                                        text = "$fecha $hora",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
                                 }
-                                repeat(5 - rating) {
-                                    Icon(Icons.Default.Star, contentDescription = null, tint = Color.LightGray)
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Texto del comentario
+                                Text(
+                                    text = comentario["texto"]?.toString() ?: "",
+                                    fontSize = 14.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Calificación con estrellas y label
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Calificación: ",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                    val rating = (comentario["calificacion"] as? Long)?.toInt() ?: 0
+                                    repeat(rating) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = "Estrella",
+                                            tint = Color(0xFFFFC107),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -145,12 +175,5 @@ fun DetalleEventoScreen(
                 }
             }
         }
-
-        //esto va aca 
-    } ?: Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }

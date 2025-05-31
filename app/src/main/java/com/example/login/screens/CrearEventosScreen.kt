@@ -62,7 +62,7 @@ fun CrearEventoScreen(navController: NavHostController, auth: FirebaseAuth) {
             onClick = {
                 val userEmail = auth.currentUser?.email ?: ""
                 if (titulo.isNotBlank() && descripcion.isNotBlank() && ubicacion.isNotBlank()) {
-                    // Obtener el último ID y sumarle 1
+                    // Obtener el último ID
                     db.collection("eventos")
                         .orderBy("id", Query.Direction.DESCENDING)
                         .limit(1)
@@ -82,19 +82,19 @@ fun CrearEventoScreen(navController: NavHostController, auth: FirebaseAuth) {
                             )
 
                             db.collection("eventos")
-                                .add(evento)
+                                .document(newId.toString())
+                                .set(evento)
                                 .addOnSuccessListener {
                                     mensaje = "✅ Evento guardado correctamente"
                                     navController.navigate("ver_eventos")
                                 }
                                 .addOnFailureListener {
                                     mensaje = "❌ Error al guardar evento"
-                                    Log.e("CrearEvento", it.message.toString())
                                 }
                         }
                         .addOnFailureListener {
                             mensaje = "❌ Error al generar ID"
-                            Log.e("CrearEvento", it.message.toString())
+                            //Log.e("CrearEvento", it.message.toString())
                         }
                 } else {
                     mensaje = "⚠️ Todos los campos son obligatorios"

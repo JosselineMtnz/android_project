@@ -104,8 +104,6 @@ class MainActivity : ComponentActivity() {
                         val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
                         ComentarScreen(navController, eventoId, auth)
                     }
-
-
                 }
             }
         }

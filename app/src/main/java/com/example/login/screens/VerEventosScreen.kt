@@ -32,7 +32,7 @@ fun VerEventosScreen(navController: NavHostController, auth: FirebaseAuth) {
                 eventos.clear()
                 for (doc in snapshot.documents) {
                     val data = doc.data?.mapValues { it.value.toString() }?.toMutableMap() ?: mutableMapOf()
-                    data["id"] = doc.id
+                    data["id"] = doc.getLong("id")?.toString() ?: continue
                     eventos.add(data)
                 }
             }
