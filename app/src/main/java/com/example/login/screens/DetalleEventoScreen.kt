@@ -1,12 +1,16 @@
-//screens/DetalleEventoScreen.kt
 package com.example.login.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.login.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -29,42 +33,39 @@ fun DetalleEventoScreen(
     }
 
     evento?.let {
-        Column(Modifier.padding(16.dp)) {
-            Text("Título: ${it["titulo"]}", style = MaterialTheme.typography.headlineMedium)
-            Text("Descripción: ${it["descripcion"]}")
-            Text("Ubicación: ${it["ubicacion"]}")
-            Text("Fecha: ${it["fecha"]}")
-            Text("Hora: ${it["hora"]}")
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo2),
+                contentDescription = "Logo App",
+                modifier = Modifier.size(100.dp)
+            )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Button(onClick = {
-                db.collection("eventos").document(eventoId)
-                    .collection("asistentes")
-                    .document(userEmail)
-                    .set(mapOf("email" to userEmail))
-                    .addOnSuccessListener {
-                        mensaje = "Asistencia confirmada"
-                    }
-                    .addOnFailureListener {
-                        mensaje = "Error al confirmar asistencia"
-                    }
-            }) {
-                Text("Confirmar Asistencia")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(6.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text("🎫 ${it["titulo"]}", fontSize = 24.sp, style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("📝 ${it["descripcion"]}")
+                    Text("📍 ${it["ubicacion"]}")
+                    Text("📅 ${it["fecha"]} | 🕒 ${it["hora"]}")
+                }
             }
 
-            Spacer(Modifier.height(8.dp))
 
-            Button(onClick = {
-                navController.navigate("comentario/$eventoId")
-            }) {
-                Text("Dejar Comentario")
-            }
-
-            if (mensaje.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                Text(mensaje, color = MaterialTheme.colorScheme.primary)
-            }
         }
-    } ?: Text("Cargando evento...")
+    } ?: Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
 }

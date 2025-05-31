@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("androidx.navigation:navigation-compose:2.6.0")
-
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
 
     // Testing
     testImplementation(libs.junit)
