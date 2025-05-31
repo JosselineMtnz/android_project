@@ -100,6 +100,11 @@ class MainActivity : ComponentActivity() {
                     composable("historial") {
                         HistorialEventosScreen(navController, auth)
                     }
+                    composable("comentar/{eventoId}") { backStackEntry ->
+                        val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                        ComentarScreen(navController, eventoId, auth)
+                    }
+
 
                 }
             }
