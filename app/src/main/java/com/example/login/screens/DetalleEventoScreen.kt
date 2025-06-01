@@ -131,7 +131,7 @@ fun DetalleEventoScreen(
                                     Text(
                                         text = comentario["creado_por"]?.toString() ?: "Anónimo",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp
+                                        fontSize = 20git status.sp
                                     )
                                     val fecha = comentario["fecha"]?.toString() ?: ""
                                     val hora = comentario["hora"]?.toString() ?: ""
